@@ -286,7 +286,7 @@ def summarize_jwc(data):
     items = data["items"][:20]
     lines = "\n".join([f"{i+1}. [{x['date']}] {x['title']} (链接{i+1}: {x['url']})" for i, x in enumerate(items)])
 
-    prompt = f"""下面是学校教务网最近的通知标题列表，每条后面标了对应的链接编号。请你严格按下面的格式输出，每一条都必须换行独占一行：
+    prompt = f"""下面是研究生院和学院最近发的研究生通知标题列表，每条后面标了对应的链接编号。请你严格按下面的格式输出，每一条都必须换行独占一行：
 
 【需要行动】
 标题|||链接|||一句话说明（不超过15字，说清楚要做什么/截止时间）
@@ -300,7 +300,7 @@ def summarize_jwc(data):
 
 {NO_RHETORIC_RULE}
 
-判断标准：转专业、报名截止日期临近的竞赛、需要核对的考试安排/成绩 = 需要行动；获奖喜报、预告类通知、跟自己大概率无关的 = 仅需了解。
+判断标准：选课/成绩认定、学位申请与答辩材料报送、助教助管招聘、报名截止日期临近的竞赛 = 需要行动；获奖公示、活动预告、跟自己大概率无关的 = 仅需了解。
 
 通知列表：
 {lines}
@@ -489,7 +489,7 @@ def summarize_one_pick(label, items, top_n, extra_rule="", seen_titles=None):
 
 def generate_action_advice(jwc_text, tech_text, top_picks_text, economy_text, politics_text, science_text):
     """今日行动建议：结合用户画像+当天全部内容，方向和推荐动作必须是学生今天能做完的具体小事"""
-    all_content = f"""教务网：
+    all_content = f"""研究生通知（研究生院/学院）：
 {jwc_text}
 
 各榜单头名：
@@ -540,7 +540,7 @@ def generate_action_advice(jwc_text, tech_text, top_picks_text, economy_text, po
 
 
 def summarize_overview(jwc_text, tech_text):
-    prompt = f"""下面是今天的教务网通知摘要和科技资讯摘要，请你写一段"今日总览"，格式严格如下：
+    prompt = f"""下面是今天的研究生通知摘要和科技资讯摘要，请你写一段"今日总览"，格式严格如下：
 
 【今日一句话】
 用抽象但有信息量的方式概括今天的主题/趋势，不超过25字。要求：
@@ -558,11 +558,11 @@ def summarize_overview(jwc_text, tech_text):
 结合这个人的AI PM求职方向，这个趋势可能意味着什么值得准备的方向（不要用职场黑话）
 
 【今日最该做的一件事】
-如果教务网有"需要行动"的内容，从中挑最紧急的一条，一句话提醒（不超过20字）；如果没有，就写"今天没有紧急待办，可以轻松看资讯"
+如果研究生通知里有"需要行动"的内容，从中挑最紧急的一条，一句话提醒（不超过20字）；如果没有，就写"今天没有紧急待办，可以轻松看资讯"
 
 {NO_RHETORIC_RULE}
 
-教务网摘要：
+研究生通知摘要：
 {jwc_text}
 
 科技资讯摘要：
