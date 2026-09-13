@@ -1,9 +1,12 @@
 """fetch_jwc_news 的解析与合并逻辑测试（离线，不发真实请求）"""
 import json
+import socket
 import sys
 import unittest
 from pathlib import Path
 from unittest import mock
+
+from urllib3.util import connection as urllib3_connection
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -70,6 +73,17 @@ class ParseSistResponseTest(unittest.TestCase):
 
 
 class NormalizeDateTest(unittest.TestCase):
+    def test_prefer_ipv4_switches_urllib3_family(self):
+        """GitHub runner 上出现过 IPv6 无路由，强制 IPv4 是兜底手段"""
+        urllib3_connection.allowed_gai_family = lambda: socket.AF_UNSPEC
+        self.addCleanup(
+            setattr, urllib3_connection, "allowed_gai_family", lambda: socket.AF_UNSPEC
+        )
+
+        mod.prefer_ipv4()
+
+        self.assertEqual(urllib3_connection.allowed_gai_family(), socket.AF_INET)
+
     def test_accepts_dot_slash_and_dash_separators(self):
         self.assertEqual(mod.normalize_date("2026.09.12"), "2026-09-12")
         self.assertEqual(mod.normalize_date("2026-09-10 17:00:23"), "2026-09-10")
