@@ -331,7 +331,7 @@ def build_html(date, slot, sections):
 
     tab_bar = f'''
     <div style="display:table; width:100%; margin-bottom:18px; border-bottom:2px solid #eee;">
-        <div style="display:table-cell; width:50%; text-align:center; padding:12px 0; background:{COLOR_DARK}; color:#fff; font-size:16px; font-weight:600; border-radius:6px 0 0 0;">🏫 学校教务</div>
+        <div style="display:table-cell; width:50%; text-align:center; padding:12px 0; background:{COLOR_DARK}; color:#fff; font-size:16px; font-weight:600; border-radius:6px 0 0 0;">🎓 研究生通知</div>
         <div style="display:table-cell; width:50%; text-align:center; padding:12px 0; background:{COLOR_ACCENT}; color:#fff; font-size:16px; font-weight:600; border-radius:0 6px 0 0;">💻 科技资讯</div>
     </div>
     '''
@@ -353,7 +353,7 @@ def build_html(date, slot, sections):
 
         {tab_bar}
 
-        <h2 style="font-size:18px; color:{COLOR_DARK}; margin-top:8px;">学校教务</h2>
+        <h2 style="font-size:18px; color:{COLOR_DARK}; margin-top:8px;">🎓 研究生通知</h2>
         {jwc_html}
 
         <h2 style="font-size:18px; color:{COLOR_DARK}; margin-top:26px;">🏆 各榜单头名</h2>

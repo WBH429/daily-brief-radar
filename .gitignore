@@ -3,4 +3,5 @@ __pycache__/
 
 # 抓取产生的中间数据和生成的简报，不需要进版本库
 *.json
+!tests/fixtures/*.json
 daily_brief.md
