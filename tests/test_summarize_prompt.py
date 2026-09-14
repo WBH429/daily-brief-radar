@@ -38,6 +38,22 @@ class SummarizePromptTest(unittest.TestCase):
         self.assertIn(DIRECTION, prompt)
         self.assertNotIn("AI PM", prompt)
 
+    def test_jwc_prompt_labels_source_and_asks_for_balance(self):
+        data = {"items": [
+            {"title": "学院通知", "date": "2026-09-10",
+             "url": "https://sist.swjtu.edu.cn/a", "source": "信息学院"},
+            {"title": "研究生院通知", "date": "2026-09-11",
+             "url": "https://gsnews.swjtu.edu.cn/b", "source": "研究生院"},
+        ]}
+
+        prompt = self.mod.summarize_jwc(data)
+
+        self.assertIn("[信息学院]", prompt)
+        self.assertIn("[研究生院]", prompt)
+        self.assertIn("来源|||标题|||链接", prompt)   # 输出格式里带来源
+        self.assertIn("四部分", prompt)
+        self.assertIn("每个来源", prompt)
+
 
 if __name__ == "__main__":
     unittest.main()

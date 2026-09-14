@@ -31,6 +31,7 @@ class ParseGsHtmlTest(unittest.TestCase):
         self.assertEqual(first["title"], "关于2026年秋季学期研究生课程成绩认定（转录）的通知")
         self.assertEqual(first["date"], "2026-09-12")
         self.assertEqual(first["url"], "https://gsnews.swjtu.edu.cn/info/1637/34844.htm")
+        self.assertEqual(first["source"], "研究生院")
 
     def test_keeps_page_order_and_skips_empty_titles(self):
         self.assertEqual(
@@ -70,6 +71,7 @@ class ParseSistResponseTest(unittest.TestCase):
             self.items[0]["title"],
             "信息学院2026-2027学年第1学期研究生 “教学实践（创新创业与社会实践）”及“三助”岗位申请通知",
         )
+        self.assertEqual(self.items[0]["source"], "信息学院")
 
 
 class NormalizeDateTest(unittest.TestCase):

@@ -54,6 +54,27 @@ def _split_line(line, min_parts):
     return parts
 
 
+def _split_line_raw(line):
+    """按 ||| 拆行但不补齐，用来区分「带来源」的四段式和旧的三段式"""
+    line = _LEADING_MARKER_RE.sub("", line).strip()
+    if "|||" not in line:
+        return None
+    return [p.strip() for p in line.split("|||")]
+
+
+# 通知来源标签的底色：研究生院用深色，信息学院用主题蓝
+_SOURCE_COLORS = {"研究生院": COLOR_DARK, "信息学院": COLOR_ACCENT}
+
+
+def _source_badge(source):
+    if not source:
+        return ""
+    color = _SOURCE_COLORS.get(source, COLOR_MUTED)
+    return (f'<span style="display:inline-block; background:{color}; color:#fff; font-size:12px; '
+            f'padding:3px 10px; border-radius:10px; margin-right:6px; vertical-align:2px;">'
+            f'{html_lib.escape(source)}</span>')
+
+
 def _safe_href(url):
     """将原始 URL 安全地放入 HTML href 属性，避免邮箱客户端截断链接。"""
     url = (url or "").strip().strip("<>\"'")
@@ -88,11 +109,22 @@ def collect_seen_items(sections):
     seen_urls = set()
     for key in ("jwc", "top_picks", "tech", "economy", "politics", "science"):
         for raw_line in sections.get(key, "").split("\n"):
-            parts = _split_line(raw_line, 3)
-            if not parts:
-                continue
-            # jwc 是"标题|||链接|||说明"，其余卡片是"来源|||标题|||链接|||..."
-            title, url = (parts[0], parts[1]) if key == "jwc" else (parts[1], parts[2])
+            if key == "jwc":
+                # 通知是"来源|||标题|||链接|||说明"，旧数据可能还是"标题|||链接|||说明"
+                raw_parts = _split_line_raw(raw_line)
+                if not raw_parts:
+                    continue
+                if len(raw_parts) >= 4:
+                    title, url = raw_parts[1], raw_parts[2]
+                else:
+                    title = raw_parts[0]
+                    url = raw_parts[1] if len(raw_parts) > 1 else ""
+            else:
+                # 其余卡片是"来源|||标题|||链接|||..."
+                parts = _split_line(raw_line, 3)
+                if not parts:
+                    continue
+                title, url = parts[1], parts[2]
             if title and url and url not in seen_urls:
                 seen_urls.add(url)
                 seen.append({"title": title, "url": url})
@@ -155,21 +187,29 @@ def render_jwc_cards(text):
             mode = "info"
             html += f'<div style="font-size:15px; color:{COLOR_MUTED}; font-weight:bold; margin:16px 0 10px;">○ 仅需了解</div>'
             continue
-        parts = _split_line(line, 3)
+        parts = _split_line_raw(line)
         if not parts:
             continue
-        title, url, desc = parts[0], parts[1], parts[2]
+        if len(parts) >= 4:
+            # 新格式：来源|||标题|||链接|||说明
+            source, title, url, desc = parts[0], parts[1], parts[2], parts[3]
+        else:
+            # 旧格式（或 AI 少写了来源）：标题|||链接|||说明，没有来源标签
+            source = ""
+            padded = parts + [""] * (3 - len(parts))
+            title, url, desc = padded[0], padded[1], padded[2]
         if not title:
             continue
+        badge_html = _source_badge(source)
         title_html = f'<a href="{_safe_href(url)}" style="color:inherit; text-decoration:none; border-bottom:1px dotted currentColor;">{html_lib.escape(title)}</a>' if url else html_lib.escape(title)
         if mode == "action":
             html += f'''<div style="background:{COLOR_BG_ACCENT}; border-left:3px solid {COLOR_ACCENT}; border-radius:4px; padding:14px 18px; margin-bottom:10px;">
-                <div style="font-size:17px; font-weight:600; color:#222;">{title_html}</div>
+                <div style="font-size:17px; font-weight:600; color:#222;">{badge_html}{title_html}</div>
                 <div style="font-size:15px; color:#555; margin-top:6px; line-height:1.5;">{desc}</div>
             </div>'''
         else:
             html += f'''<div style="background:{COLOR_BG_MUTED}; border-radius:4px; padding:14px 18px; margin-bottom:10px;">
-                <div style="font-size:16px; color:#444;">{title_html}</div>
+                <div style="font-size:16px; color:#444;">{badge_html}{title_html}</div>
                 <div style="font-size:14px; color:#999; margin-top:6px; line-height:1.5;">{desc}</div>
             </div>'''
     return html

@@ -37,6 +37,7 @@ from urllib3.util import connection as urllib3_connection
 
 # —— 数据源 1：研究生院通知公告（新版） ——
 GS_LIST_URL = "https://gsnews.swjtu.edu.cn/tzggnew/qb.htm"
+SOURCE_GS = "研究生院"
 
 # —— 数据源 2：信息学院「教育教学 > 研究生教育 > 通知公告」 ——
 SIST_SITE = "https://sist.swjtu.edu.cn"
@@ -45,6 +46,7 @@ SIST_SITE_TYPE = "NEd5n92EMIpyyBslaNqsRgE"    # 接口要求的站点标识，�
 SIST_NAV_ID = "1yaM_T4qiBsFULvLXHbMflQ"       # 研究生教育 > 通知公告 的栏目 id
 SIST_SECOND_ID = "NrWCF8Dr-wmmIxdXvZPeCQY"     # 上级栏目「教育教学」的 id，拼详情链接用
 SIST_PAGE_SIZE = 20
+SOURCE_SIST = "信息学院"
 
 REQUEST_TIMEOUT = 15
 HEADERS = {
@@ -112,6 +114,7 @@ def parse_gs_html(html, page_url=GS_LIST_URL):
             "title": title,
             "date": date_str,
             "url": urljoin(page_url, link["href"]),
+            "source": SOURCE_GS,
         })
 
     return items
@@ -131,6 +134,7 @@ def parse_sist_response(payload):
             "title": title,
             "date": normalize_date(row.get("publishTime") or ""),
             "url": sist_article_url(article_id),
+            "source": SOURCE_SIST,
         })
 
     return items
