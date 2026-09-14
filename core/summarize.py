@@ -71,6 +71,10 @@ _DEFAULT_PROFILE_TEXT = """身份：暂未设置具体画像
 
 USER_PROFILE_TEXT = _USER_PROFILE_TEXT or _DEFAULT_PROFILE_TEXT
 
+# 求职/发展方向：暂时固定为 AI PM。以后换方向改这一行，或者配一个 USER_DIRECTION
+# 的 Secret（workflow 已经透传），不用再去提示词里翻硬编码。
+USER_DIRECTION = os.environ.get("USER_DIRECTION", "").strip() or "AI PM"
+
 USER_PROFILE_PRIORITY = """筛选内容时请参考这个人的背景（这份背景由她本人通过问卷填写，请严格按照
 里面写的关注领域和排除规则来筛选，不要脑补里面没提到的偏好）：
 
@@ -363,7 +367,7 @@ def get_top_picks(github_data, hn_data, rss_data, seen_titles=None):
 - 发生了什么：一句话说清楚具体是什么事
 - 处理情况：现在进展到哪一步（真的没提到就换候选，不要写占位词）
 - 原理科普：一句话说清楚背后的原理/技术是什么，用初中生能听懂的话
-- 对你的意义：结合她的AI PM求职方向和学生身份，给一句具体感受或启发
+- 对你的意义：结合她的{USER_DIRECTION}求职方向和学生身份，给一句具体感受或启发
 
 {NO_RHETORIC_RULE}
 
@@ -555,7 +559,7 @@ def summarize_overview(jwc_text, tech_text):
 【趋势预测】
 1-2句话，基于今天的信息，往前展望一步：接下来可能会怎样发展。
 {NO_JARGON_RULE}
-结合这个人的AI PM求职方向，这个趋势可能意味着什么值得准备的方向（不要用职场黑话）
+结合这个人的{USER_DIRECTION}求职方向，这个趋势可能意味着什么值得准备的方向（不要用职场黑话）
 
 【今日最该做的一件事】
 如果研究生通知里有"需要行动"的内容，从中挑最紧急的一条，一句话提醒（不超过20字）；如果没有，就写"今天没有紧急待办，可以轻松看资讯"
@@ -576,6 +580,12 @@ if __name__ == "__main__":
     slot_label = "早班" if slot == "morning" else "晚班"
     print(f"正在生成今日简报（{slot_label}）...\n")
 
+    # 打一行状态：画像没配好时简报会退化成通用模板，日志里要能一眼看出来
+    if _USER_PROFILE_TEXT:
+        print("用户画像：已从环境变量读取")
+    else:
+        print("用户画像：未配置，本次使用通用默认画像（去 README 看 USER_PROFILE_TEXT 怎么配）")
+
     today = datetime.now().strftime("%Y-%m-%d")
     sections = {}
 
@@ -593,7 +603,7 @@ if __name__ == "__main__":
             jwc_data = None
 
     if jwc_data:
-        print("正在总结教务网通知...")
+        print("正在总结研究生通知...")
         sections["jwc"] = summarize_jwc(jwc_data)
         print(sections["jwc"] + "\n")
 

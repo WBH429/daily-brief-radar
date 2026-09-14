@@ -33,6 +33,11 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           DAILY_FREQUENCY: ${{ secrets.DAILY_FREQUENCY }}
+          # 【修复】下面三个是脚本真正要用的用户画像，之前漏传了：
+          # summarize.py 读不到就退回"暂未设置具体画像"的通用默认值，问卷等于白填
+          USER_NAME: ${{ secrets.USER_NAME }}
+          USER_PROFILE_TEXT: ${{ secrets.USER_PROFILE_TEXT }}
+          USER_DIRECTION: ${{ secrets.USER_DIRECTION }}
         run: |
           # 【修复】GitHub Actions 的 schedule 触发经常会有延迟（官方已知机制，
           # 高峰期可能晚触发几十分钟甚至更久）。原来的判断只认死板的"UTC 23点整

@@ -26,12 +26,14 @@
 import json
 import random
 import re
+import socket
 import time
 from datetime import datetime
 from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
+from urllib3.util import connection as urllib3_connection
 
 # —— 数据源 1：研究生院通知公告（新版） ——
 GS_LIST_URL = "https://gsnews.swjtu.edu.cn/tzggnew/qb.htm"
@@ -76,6 +78,16 @@ def sist_article_url(article_id):
         SIST_NAV_ID,
         article_id,
     )
+
+
+def prefer_ipv4():
+    """让 requests 只走 IPv4。
+
+    GitHub Actions 的 runner 上抓到过 `[Errno 101] Network is unreachable`
+    （IPv6 没有出网路由时会出现这个报错），学校站点都是 IPv4 能通的，
+    所以这里强制 IPv4 作为兜底，不影响本地运行。
+    """
+    urllib3_connection.allowed_gai_family = lambda: socket.AF_INET
 
 
 def parse_gs_html(html, page_url=GS_LIST_URL):
@@ -156,6 +168,7 @@ def fetch_gs_news():
 def fetch_sist_news():
     """抓信息学院「研究生教育 > 通知公告」（走官网自己的公开接口）"""
     time.sleep(random.uniform(1, 3))
+    prefer_ipv4()
 
     payload = {
         "id": SIST_NAV_ID,
@@ -163,7 +176,11 @@ def fetch_sist_news():
         "pageSize": SIST_PAGE_SIZE,
         "sitetype": SIST_SITE_TYPE,
     }
-    resp = requests.post(SIST_API_URL, json=payload, headers=HEADERS, timeout=REQUEST_TIMEOUT)
+    try:
+        resp = requests.post(SIST_API_URL, json=payload, headers=HEADERS, timeout=REQUEST_TIMEOUT)
+    except requests.RequestException as exc:
+        # 这个源只在 CI 上偶尔连不通，报错里带上解析结果，方便下次一眼定位
+        raise RuntimeError("学院站点连接失败（%s）：%s" % (_describe_host("sist.swjtu.edu.cn"), exc)) from exc
     resp.raise_for_status()
 
     data = resp.json()
@@ -171,6 +188,16 @@ def fetch_sist_news():
         raise RuntimeError("学院接口返回异常：%s" % (data.get("msg") or data.get("code")))
 
     return parse_sist_response(data)
+
+
+def _describe_host(host, port=443):
+    """把主机解析到的 IP 拼成一行，用于报错时说明走的是哪个地址"""
+    try:
+        addrs = socket.getaddrinfo(host, port)
+    except Exception as exc:  # 解析都失败也要能报错
+        return "解析失败：%s" % exc
+    ips = sorted({addr[4][0] for addr in addrs})
+    return "解析到 " + "/".join(ips) if ips else "没有解析到地址"
 
 
 def fetch_jwc_news():
