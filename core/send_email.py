@@ -349,12 +349,12 @@ def build_html(date, slot, sections):
 
         {opening_html}
 
-        {overview_html}
-
         {tab_bar}
 
         <h2 style="font-size:18px; color:{COLOR_DARK}; margin-top:8px;">🎓 研究生通知</h2>
         {jwc_html}
+
+        {overview_html}
 
         <h2 style="font-size:18px; color:{COLOR_DARK}; margin-top:26px;">🏆 各榜单头名</h2>
         {top_picks_html}
